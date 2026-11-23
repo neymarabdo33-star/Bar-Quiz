@@ -1,4 +1,4 @@
-index.html<!doctype html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -9,7 +9,7 @@ index.html<!doctype html>
     body { font-family: Tahoma, Arial, sans-serif; background: #1f3d2b; margin: 0;
            display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     .box { background: #fff; width: 90%; max-width: 480px; padding: 24px;
-           border-radius: 16px; text-align: center; color: #222; }
+           border-radius: 16px; text-align: center; color: #222; margin: 16px 0; }
     .hidden { display: none; }
     button { font-size: 18px; padding: 12px 24px; border: none; border-radius: 10px;
              cursor: pointer; margin: 6px; color: #fff; background: #6b4a2f; }
@@ -19,6 +19,10 @@ index.html<!doctype html>
     #qtext { font-size: 22px; margin: 24px 0; line-height: 1.6; }
     #feedback { min-height: 60px; font-size: 16px; line-height: 1.6; }
     .ok { color: #2e8b57; } .bad { color: #c0392b; }
+    input { width: 100%; box-sizing: border-box; font-size: 16px; padding: 10px;
+            margin: 6px 0; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; }
+    .note { font-size: 13px; color: #666; margin-top: 10px; }
+    #error { color: #c0392b; min-height: 22px; font-size: 14px; }
   </style>
 </head>
 
@@ -28,7 +32,13 @@ index.html<!doctype html>
   <div id="start" class="box">
     <h1>صح ولا غلط</h1>
     <p>اختبر معلوماتك في مانوال بار كريف</p>
+    <input id="f-name" type="text" placeholder="الاسم">
+    <input id="f-code" type="text" placeholder="الكود">
+    <input id="f-job" type="text" placeholder="الوظيفة">
+    <input id="f-branch" type="text" placeholder="الفرع">
+    <div id="error"></div>
     <button onclick="startGame()">ابدأ</button>
+    <div class="note">نتيجتك بتتسجل عشان المتابعة والتقييم.</div>
   </div>
 
   <!-- شاشة اللعبة -->
@@ -51,12 +61,16 @@ index.html<!doctype html>
     <p>النقاط: <b id="r-score"></b></p>
     <p>الدقة: <b id="r-acc"></b></p>
     <p>أعلى سلسلة صح: <b id="r-streak"></b></p>
-    <button onclick="startGame()">العب تاني</button>
+    <p id="r-status" class="note"></p>
+    <button onclick="playAgain()">العب تاني</button>
   </div>
 
   <script src="questions.js"></script>
   <script>
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbx-AAm5TSPDnfL4ln1G-iuMeKOlAO_ENHv4N-GPh_fj43e0UIypeBoWlwMkopD2o_nq/exec";
+
     let questions = [], index = 0, score = 0, streak = 0, bestStreak = 0, correctCount = 0, locked = false;
+    let player = {};
     const $ = id => document.getElementById(id);
 
     function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
@@ -67,10 +81,26 @@ index.html<!doctype html>
     }
 
     function startGame() {
+      player = {
+        name: $('f-name').value.trim(),
+        code: $('f-code').value.trim(),
+        job: $('f-job').value.trim(),
+        branch: $('f-branch').value.trim()
+      };
+      if (!player.name || !player.code || !player.job || !player.branch) {
+        $('error').textContent = 'من فضلك املأ كل البيانات قبل ما تبدأ';
+        return;
+      }
+      $('error').textContent = '';
       questions = shuffle(QUESTIONS);
       index = 0; score = 0; streak = 0; bestStreak = 0; correctCount = 0;
       show('game');
       showQuestion();
+    }
+
+    function playAgain() {
+      ['f-name', 'f-code', 'f-job', 'f-branch'].forEach(id => $(id).value = '');
+      show('start');
     }
 
     function showQuestion() {
@@ -107,11 +137,25 @@ index.html<!doctype html>
     }
 
     function showResult() {
+      const accuracy = Math.round(correctCount / questions.length * 100) + '%';
       $('r-score').textContent = score;
-      $('r-acc').textContent = Math.round(correctCount / questions.length * 100) + '%';
+      $('r-acc').textContent = accuracy;
       $('r-streak').textContent = bestStreak;
+      $('r-status').textContent = 'جاري تسجيل نتيجتك...';
       show('result');
+
+      fetch(SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          name: player.name, code: player.code, job: player.job,
+          branch: player.branch, score: score, accuracy: accuracy
+        })
+      })
+      .then(() => { $('r-status').textContent = '✔ تم تسجيل نتيجتك'; })
+      .catch(() => { $('r-status').textContent = 'تعذّر تسجيل النتيجة، تأكد من الإنترنت وجرّب تاني'; });
     }
   </script>
 </body>
-</html> 
+</html>
