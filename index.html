@@ -23,6 +23,17 @@
             margin: 6px 0; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; }
     .note { font-size: 13px; color: #666; margin-top: 10px; }
     #error { color: #c0392b; min-height: 22px; font-size: 14px; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+@keyframes floatUp { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-90px) scale(1.6); } }
+.slide { animation: slideIn .35s ease; }
+.good-flash { animation: pulse .4s; outline: 4px solid #2e8b57; }
+.bad-flash { animation: shake .4s; outline: 4px solid #c0392b; }
+#game { position: relative; overflow: hidden; }
+#pop { position: absolute; top: 35%; left: 0; right: 0; font-size: 42px; font-weight: bold;
+       color: #2e8b57; pointer-events: none; opacity: 0; }
+.pop-go { animation: floatUp .9s ease-out; }
   </style>
 </head>
 
@@ -43,6 +54,7 @@
 
   <!-- شاشة اللعبة -->
   <div id="game" class="box hidden">
+    <div id="pop"></div>
     <div class="stats">
       <span>النقاط: <span id="score">0</span></span>
       <span>السلسلة: <span id="streak">0</span></span>
