@@ -1,0 +1,117 @@
+index.html<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صح ولا غلط - بار كريف</title>
+
+  <style>
+    body { font-family: Tahoma, Arial, sans-serif; background: #1f3d2b; margin: 0;
+           display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .box { background: #fff; width: 90%; max-width: 480px; padding: 24px;
+           border-radius: 16px; text-align: center; color: #222; }
+    .hidden { display: none; }
+    button { font-size: 18px; padding: 12px 24px; border: none; border-radius: 10px;
+             cursor: pointer; margin: 6px; color: #fff; background: #6b4a2f; }
+    .true-btn { background: #2e8b57; }
+    .false-btn { background: #c0392b; }
+    .stats { display: flex; justify-content: space-around; margin-bottom: 16px; font-weight: bold; }
+    #qtext { font-size: 22px; margin: 24px 0; line-height: 1.6; }
+    #feedback { min-height: 60px; font-size: 16px; line-height: 1.6; }
+    .ok { color: #2e8b57; } .bad { color: #c0392b; }
+  </style>
+</head>
+
+<body>
+
+  <!-- شاشة البداية -->
+  <div id="start" class="box">
+    <h1>صح ولا غلط</h1>
+    <p>اختبر معلوماتك في مانوال بار كريف</p>
+    <button onclick="startGame()">ابدأ</button>
+  </div>
+
+  <!-- شاشة اللعبة -->
+  <div id="game" class="box hidden">
+    <div class="stats">
+      <span>النقاط: <span id="score">0</span></span>
+      <span>السلسلة: <span id="streak">0</span></span>
+    </div>
+    <div id="progress"></div>
+    <div id="qtext"></div>
+    <button class="true-btn" onclick="answer(true)">صح ✔</button>
+    <button class="false-btn" onclick="answer(false)">غلط ✖</button>
+    <div id="feedback"></div>
+    <button id="next" class="hidden" onclick="nextQuestion()">التالي</button>
+  </div>
+
+  <!-- شاشة النتيجة -->
+  <div id="result" class="box hidden">
+    <h2>النتيجة النهائية</h2>
+    <p>النقاط: <b id="r-score"></b></p>
+    <p>الدقة: <b id="r-acc"></b></p>
+    <p>أعلى سلسلة صح: <b id="r-streak"></b></p>
+    <button onclick="startGame()">العب تاني</button>
+  </div>
+
+  <script src="questions.js"></script>
+  <script>
+    let questions = [], index = 0, score = 0, streak = 0, bestStreak = 0, correctCount = 0, locked = false;
+    const $ = id => document.getElementById(id);
+
+    function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+    function show(id) {
+      ['start', 'game', 'result'].forEach(s => $(s).classList.add('hidden'));
+      $(id).classList.remove('hidden');
+    }
+
+    function startGame() {
+      questions = shuffle(QUESTIONS);
+      index = 0; score = 0; streak = 0; bestStreak = 0; correctCount = 0;
+      show('game');
+      showQuestion();
+    }
+
+    function showQuestion() {
+      locked = false;
+      $('qtext').textContent = questions[index].text;
+      $('progress').textContent = 'سؤال ' + (index + 1) + ' من ' + questions.length;
+      $('score').textContent = score;
+      $('streak').textContent = streak;
+      $('feedback').textContent = '';
+      $('next').classList.add('hidden');
+    }
+
+    function answer(choice) {
+      if (locked) return;
+      locked = true;
+      const q = questions[index];
+      if (choice === q.answer) {
+        correctCount++; streak++; score += 10;
+        bestStreak = Math.max(bestStreak, streak);
+        $('feedback').innerHTML = '<span class="ok">✔ إجابة صح!</span><br>' + q.note;
+      } else {
+        streak = 0;
+        $('feedback').innerHTML = '<span class="bad">✖ إجابة غلط</span><br>' + q.note;
+      }
+      $('score').textContent = score;
+      $('streak').textContent = streak;
+      $('next').textContent = (index === questions.length - 1) ? 'شوف النتيجة' : 'التالي';
+      $('next').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      index++;
+      if (index >= questions.length) showResult(); else showQuestion();
+    }
+
+    function showResult() {
+      $('r-score').textContent = score;
+      $('r-acc').textContent = Math.round(correctCount / questions.length * 100) + '%';
+      $('r-streak').textContent = bestStreak;
+      show('result');
+    }
+  </script>
+</body>
+</html> 
